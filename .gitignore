@@ -1,0 +1,12 @@
+# Local secrets and environment files
+.env
+.env.*
+!.env.example
+*secret*
+*credentials*
+*.local.js
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/

@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Sensor Analytics System | IoT Environmental Monitoring</title>
+    
+    <!-- Design System Typography & Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Stylesheets: Professional Blue and White Theme -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+    <div class="ambient-glow"></div>
+
+    <div class="app-container">
+        <!-- Top Navigation Header Bar -->
+        <header class="navbar">
+            <div class="brand-wrapper">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                        <circle cx="12" cy="12" r="9"/>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <h1>Smart Sensor Analytics System</h1>
+                    <div class="brand-subtitle">
+                        <span>IoT Telemetry</span>
+                        <span>•</span>
+                        <span>ESP32 + DHT11 + LDR</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-actions">
+                <div class="connection-pill" id="connectionPill">
+                    <span class="pulse-dot" id="connectionDot"></span>
+                    <span id="connectionText">Connecting...</span>
+                    <span id="lastUpdatedTime" style="font-weight: 500; color: var(--text-muted); margin-left: 0.25rem;"></span>
+                </div>
+
+                <button class="btn btn-secondary" id="btnRefresh" title="Fetch Latest Telemetry">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                    <span>Sync</span>
+                </button>
+
+                <button class="btn btn-secondary btn-icon-only" id="btnOpenSettings" title="Configure Channel & API Keys">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- ===================================================================
+             TAB 1: LIVE OVERVIEW (Cleaned Up: Unwanted Charts & Component Removed)
+             =================================================================== -->
+        <main class="tab-content active" id="tab-overview">
+            <div class="grid-4">
+                <!-- Temperature Card -->
+                <div class="metric-card card-temp">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>
+                            </div>
+                            <span class="card-label">Live Temperature</span>
+                        </div>
+                        <span class="trend-badge trend-stable" id="trendTemp">→ Stable</span>
+                    </div>
+                    <div class="metric-value-container">
+                        <span class="metric-value" id="valTemp">--</span>
+                        <span class="metric-unit">°C</span>
+                    </div>
+                    <div class="card-stats-row">
+                        <div class="substat-item">
+                            <span class="substat-label">Min</span>
+                            <span class="substat-val" id="statTempMin">--</span>
+                        </div>
+                        <div class="substat-item">
+                            <span class="substat-label">Avg</span>
+                            <span class="substat-val" id="statTempAvg">--</span>
+                        </div>
+                        <div class="substat-item">
+                            <span class="substat-label">Max</span>
+                            <span class="substat-val" id="statTempMax">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Humidity Card -->
+                <div class="metric-card card-hum">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+                            </div>
+                            <span class="card-label">Relative Humidity</span>
+                        </div>
+                        <span class="trend-badge trend-stable" id="trendHum">→ Stable</span>
+                    </div>
+                    <div class="metric-value-container">
+                        <span class="metric-value" id="valHum">--</span>
+                        <span class="metric-unit">%</span>
+                    </div>
+                    <div class="card-stats-row">
+                        <div class="substat-item">
+                            <span class="substat-label">Min</span>
+                            <span class="substat-val" id="statHumMin">--</span>
+                        </div>
+                        <div class="substat-item">
+                            <span class="substat-label">Avg</span>
+                            <span class="substat-val" id="statHumAvg">--</span>
+                        </div>
+                        <div class="substat-item">
+                            <span class="substat-label">Max</span>
+                            <span class="substat-val" id="statHumMax">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Light Intensity Card -->
+                <div class="metric-card card-light">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                            </div>
+                            <span class="card-label">Light Intensity</span>
+                        </div>
+                        <span class="trend-badge trend-stable" id="trendLight">→ Stable</span>
+                    </div>
+                    <div class="metric-value-container">
+                        <span class="metric-value" id="valLight">--</span>
+                        <span class="metric-unit">ADC</span>
+                    </div>
+                    <div class="card-stats-row">
+                        <div class="substat-item">
+                            <span class="substat-label">Condition</span>
+                            <span class="substat-val" id="statLightStatus">DARK</span>
+                        </div>
+                        <div class="substat-item">
+                            <span class="substat-label">Brightness</span>
+                            <span class="substat-val" id="valLightPercent">--</span>
+                        </div>
+                        <div class="substat-item">
+                            <span class="substat-label">ADC Avg</span>
+                            <span class="substat-val" id="statLightAvg">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Environmental Health & Comfort Card -->
+                <div class="metric-card card-status">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                            </div>
+                            <span class="card-label">Environmental Health</span>
+                        </div>
+                        <span class="badge badge-normal" id="valStatusBadge">NORMAL</span>
+                    </div>
+                    <div class="metric-value-container">
+                        <span class="metric-value" style="font-size: 1.45rem; font-weight: 800;" id="statConditionDesc">Safe Environment</span>
+                    </div>
+                    <div class="card-stats-row">
+                        <div class="substat-item">
+                            <span class="substat-label">Dew Point</span>
+                            <span class="substat-val" id="statDewPoint">--</span>
+                        </div>
+                        <div class="substat-item">
+                            <span class="substat-label">Heat Index</span>
+                            <span class="substat-val" id="statHeatIndex">--</span>
+                        </div>
+                        <div class="substat-item">
+                            <span class="substat-label">Sensor Unit</span>
+                            <span class="substat-val">DHT11+LDR</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Telemetry System Metadata Card -->
+            <div class="overview-metadata-card">
+                <div class="meta-item">
+                    <div class="meta-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7h-9M14 17H5M17 12H3"/><circle cx="17" cy="7" r="3"/><circle cx="9" cy="17" r="3"/><circle cx="19" cy="12" r="3"/></svg>
+                    </div>
+                    <div class="meta-info">
+                        <h5>ThingSpeak Channel</h5>
+                        <p id="metaChannelName">Smart Sensor Analytics System</p>
+                    </div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    </div>
+                    <div class="meta-info">
+                        <h5>Hardware Topology</h5>
+                        <p>ESP32 • GPIO 5 (DHT11) • GPIO 34 (LDR)</p>
+                    </div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+                    </div>
+                    <div class="meta-info">
+                        <h5>Total Ingested Data</h5>
+                        <p id="metaPacketCount">-- Packets</p>
+                    </div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    </div>
+                    <div class="meta-info">
+                        <h5>Transmission Rate</h5>
+                        <p id="metaPollRate">Every 20s</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- ===================================================================
+             TAB 2: HISTORICAL ANALYTICS (Charts & Analytics Engine)
+             =================================================================== -->
+        <section class="tab-content" id="tab-charts">
+            <!-- 1. Temperature History Chart -->
+            <div class="chart-panel">
+                <div class="chart-header">
+                    <div class="chart-title-group">
+                        <h3>Temperature History</h3>
+                        <p>Historical ambient temperature readings (°C) plotted against time</p>
+                    </div>
+                </div>
+                <div class="chart-container-box">
+                    <canvas id="tempChartCanvas"></canvas>
+                </div>
+            </div>
+
+            <!-- 2. Humidity History Chart -->
+            <div class="chart-panel">
+                <div class="chart-header">
+                    <div class="chart-title-group">
+                        <h3>Humidity History</h3>
+                        <p>Historical relative moisture curve (%) plotted against time</p>
+                    </div>
+                </div>
+                <div class="chart-container-box">
+                    <canvas id="humChartCanvas"></canvas>
+                </div>
+            </div>
+
+            <!-- 3. Light Intensity History Chart -->
+            <div class="chart-panel">
+                <div class="chart-header">
+                    <div class="chart-title-group">
+                        <h3>Light Intensity History</h3>
+                        <p>Ambient illumination percentage derived from 12-bit LDR ADC readings (GPIO 34)</p>
+                    </div>
+                </div>
+                <div class="chart-container-box">
+                    <canvas id="lightChartCanvas"></canvas>
+                </div>
+            </div>
+
+            <!-- 4. ANALYTICS ENGINE SECTION (Feature 6) -->
+            <section class="analytics-engine-container">
+                <div class="analytics-engine-header">
+                    <div>
+                        <div class="engine-tag">Statistical Intelligence</div>
+                        <h2 class="analytics-engine-title">Analytics Engine</h2>
+                        <p class="analytics-engine-subtitle">Analyze multi-variable environmental trends across historical windows.</p>
+                    </div>
+
+                    <!-- Five Selectable Time-Window Options -->
+                    <div class="time-window-selector">
+                        <span class="window-label">Time Window:</span>
+                        <div class="time-window-buttons" id="analyticsWindowButtons">
+                            <button class="window-btn" data-range="1h">1 Hour</button>
+                            <button class="window-btn" data-range="24h">24 Hours</button>
+                            <button class="window-btn" data-range="7d">7 Days</button>
+                            <button class="window-btn" data-range="30d">30 Days</button>
+                            <button class="window-btn active" data-range="all">All Data</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Time Window Indicator Bar -->
+                <div class="window-status-bar" id="analyticsWindowInfo">
+                    <div class="window-status-left">
+                        <span class="status-dot"></span>
+                        <span class="status-text" id="analyticsActiveWindowLabel">Active Window: All Data</span>
+                        <span class="status-count" id="analyticsSampleCount">(152 readings evaluated)</span>
+                    </div>
+                    <div class="window-status-timespan" id="analyticsTimespanLabel">
+                        Loading timespan bounds...
+                    </div>
+                </div>
+
+                <!-- Multi-Variable Statistics Grid (Temp, Humidity, Light/LDR) -->
+                <div class="engine-cards-grid">
+                    <!-- Temperature Analytics Card -->
+                    <div class="engine-stat-card">
+                        <div class="engine-card-header">
+                            <div class="engine-icon temp-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>
+                            </div>
+                            <div>
+                                <h4>Temperature Analytics</h4>
+                                <span class="engine-sensor-type">DHT11 Sensor • GPIO 5</span>
+                            </div>
+                        </div>
+                        <div class="engine-main-stat">
+                            <div class="stat-big">
+                                <span class="stat-number" id="engTempAvg">--</span>
+                                <span class="stat-unit">°C</span>
+                            </div>
+                            <span class="stat-sublabel">Window Average</span>
+                        </div>
+                        <div class="engine-stat-details">
+                            <div class="detail-row">
+                                <span class="detail-label">Minimum Temperature:</span>
+                                <span class="detail-val" id="engTempMin">--</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Maximum Temperature:</span>
+                                <span class="detail-val" id="engTempMax">--</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Standard Deviation:</span>
+                                <span class="detail-val" id="engTempStd">--</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Observed Trend:</span>
+                                <span class="trend-pill" id="engTempTrend">--</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Humidity Analytics Card -->
+                    <div class="engine-stat-card">
+                        <div class="engine-card-header">
+                            <div class="engine-icon hum-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+                            </div>
+                            <div>
+                                <h4>Humidity Analytics</h4>
+                                <span class="engine-sensor-type">DHT11 Sensor • GPIO 5</span>
+                            </div>
+                        </div>
+                        <div class="engine-main-stat">
+                            <div class="stat-big">
+                                <span class="stat-number" id="engHumAvg">--</span>
+                                <span class="stat-unit">%</span>
+                            </div>
+                            <span class="stat-sublabel">Window Average</span>
+                        </div>
+                        <div class="engine-stat-details">
+                            <div class="detail-row">
+                                <span class="detail-label">Minimum Humidity:</span>
+                                <span class="detail-val" id="engHumMin">--</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Maximum Humidity:</span>
+                                <span class="detail-val" id="engHumMax">--</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Standard Deviation:</span>
+                                <span class="detail-val" id="engHumStd">--</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Observed Trend:</span>
+                                <span class="trend-pill" id="engHumTrend">--</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Light / LDR Analytics Card -->
+                    <div class="engine-stat-card">
+                        <div class="engine-card-header">
+                            <div class="engine-icon light-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                            </div>
+                            <div>
+                                <h4>Light / LDR Analytics</h4>
+                                <span class="engine-sensor-type">LDR Module • GPIO 34 ADC</span>
+                            </div>
+                        </div>
+                        <div class="engine-main-stat">
+                            <div class="stat-big">
+                                <span class="stat-number" id="engLightAvg">--</span>
+                                <span class="stat-unit">ADC</span>
+                            </div>
+                            <span class="stat-sublabel" id="engLightBrightPercent">Brightness Average: --%</span>
+                        </div>
+                        <div class="engine-stat-details">
+                            <div class="detail-row">
+                                <span class="detail-label">Minimum Light (Brightest):</span>
+                                <span class="detail-val" id="engLightMin">--</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Maximum Light (Darkest):</span>
+                                <span class="detail-val" id="engLightMax">--</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Classification:</span>
+                                <span class="detail-val" id="engLightCondition">--</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Observed Trend:</span>
+                                <span class="trend-pill" id="engLightTrend">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Multi-Variable Synthesis Insight Banner -->
+                <div class="engine-insight-card" id="engineInsightCard">
+                    <div class="insight-badge">Multi-Variable Analysis Summary</div>
+                    <p class="insight-text" id="engineInsightText">
+                        Analyzing multi-variable environmental trends across the chosen time window...
+                    </p>
+                </div>
+            </section>
+        </section>
+
+        <!-- ===================================================================
+             TAB 3: ALERT CENTER
+             =================================================================== -->
+        <section class="tab-content" id="tab-alerts">
+            <div class="config-section">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+                    <div>
+                        <h3>Alert & Incident Center</h3>
+                        <p style="margin-bottom: 0;">Automated threshold checking with debouncing and recovery notifications.</p>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-secondary btn-sm" id="btnAckAllAlerts">Acknowledge All</button>
+                        <button class="btn btn-secondary btn-sm" id="btnClearAlerts">Clear Log</button>
+                    </div>
+                </div>
+
+                <div id="alertListContainer">
+                    <!-- Populated dynamically by AlertEngine -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================================================================
+             TAB 4: THRESHOLD CONFIGURATION
+             =================================================================== -->
+        <section class="tab-content" id="tab-thresholds">
+            <div class="config-section">
+                <h3>User-Defined Environmental Thresholds</h3>
+                <p>Customize upper and lower bounds for warning and critical alerts. Parameters are stored locally and applied instantly.</p>
+
+                <form id="thresholdForm">
+                    <h4 style="margin-bottom: 0.75rem; color: var(--blue-primary); font-size: 0.95rem; font-weight: 700;">Temperature Thresholds (°C)</h4>
+                    <div class="form-grid" style="margin-bottom: 1.5rem;">
+                        <div class="form-group">
+                            <label class="form-label" for="cfgTempMinCritical">Critical Low Bound (°C)</label>
+                            <input class="form-input" type="number" step="0.5" id="cfgTempMinCritical" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="cfgTempMinWarning">Warning Low Bound (°C)</label>
+                            <input class="form-input" type="number" step="0.5" id="cfgTempMinWarning" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="cfgTempMaxWarning">Warning High Bound (°C)</label>
+                            <input class="form-input" type="number" step="0.5" id="cfgTempMaxWarning" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="cfgTempMaxCritical">Critical High Bound (°C)</label>
+                            <input class="form-input" type="number" step="0.5" id="cfgTempMaxCritical" required>
+                        </div>
+                    </div>
+
+                    <h4 style="margin-bottom: 0.75rem; color: var(--hum-accent); font-size: 0.95rem; font-weight: 700;">Humidity Thresholds (%)</h4>
+                    <div class="form-grid" style="margin-bottom: 1.5rem;">
+                        <div class="form-group">
+                            <label class="form-label" for="cfgHumMinCritical">Critical Dry Bound (%)</label>
+                            <input class="form-input" type="number" step="1" id="cfgHumMinCritical" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="cfgHumMinWarning">Warning Dry Bound (%)</label>
+                            <input class="form-input" type="number" step="1" id="cfgHumMinWarning" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="cfgHumMaxWarning">Warning Humid Bound (%)</label>
+                            <input class="form-input" type="number" step="1" id="cfgHumMaxWarning" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="cfgHumMaxCritical">Critical Humid Bound (%)</label>
+                            <input class="form-input" type="number" step="1" id="cfgHumMaxCritical" required>
+                        </div>
+                    </div>
+
+                    <h4 style="margin-bottom: 0.75rem; color: var(--light-accent); font-size: 0.95rem; font-weight: 700;">LDR Light Thresholds (Raw 12-bit ADC)</h4>
+                    <div class="form-grid" style="margin-bottom: 1.5rem;">
+                        <div class="form-group">
+                            <label class="form-label" for="cfgLightDark">Dark Threshold (>= Raw ADC)</label>
+                            <input class="form-input" type="number" id="cfgLightDark" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="cfgLightBright">Bright Threshold (<= Raw ADC)</label>
+                            <input class="form-input" type="number" id="cfgLightBright" required>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+                        <button type="button" class="btn btn-secondary" id="btnResetThresholds">Reset to Defaults</button>
+                        <button type="submit" class="btn btn-primary">Save Threshold Rules</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- ===================================================================
+             TAB 5: EXPORT & REPORTS
+             =================================================================== -->
+        <section class="tab-content" id="tab-reports">
+            <div class="grid-3">
+                <div class="export-card">
+                    <div>
+                        <h4>Export Filtered Telemetry</h4>
+                        <p>Download the currently filtered time-series readings as standard CSV format for Excel, Python, or statistical software.</p>
+                    </div>
+                    <button class="btn btn-primary" id="btnExportCSV">Download Filtered CSV</button>
+                </div>
+
+                <div class="export-card">
+                    <div>
+                        <h4>Export Complete Channel Log</h4>
+                        <p>Export all historical readings logged in the channel database with complete timestamps and raw metrics.</p>
+                    </div>
+                    <button class="btn btn-secondary" id="btnExportAllCSV">Download Full Channel CSV</button>
+                </div>
+
+                <div class="export-card">
+                    <div>
+                        <h4>Executive Audit Report</h4>
+                        <p>Generate a comprehensive environmental audit summary report including statistical variances, biometeorology indices, and compliance status.</p>
+                    </div>
+                    <button class="btn btn-primary" id="btnExportReport">Generate Audit Report</button>
+                </div>
+            </div>
+
+            <div class="export-card" style="margin-top: 1.5rem;">
+                <div>
+                    <h4>Export Alert & Incident History</h4>
+                    <p>Download full record of threshold violations, severity rankings, acknowledgment status, and recovery timestamps.</p>
+                </div>
+                <button class="btn btn-secondary" id="btnExportAlertsCSV" style="align-self: flex-start;">Download Alert History CSV</button>
+            </div>
+        </section>
+    </div>
+
+    <!-- =======================================================================
+         FIXED BOTTOM NAVIGATION BAR (Requirement 3)
+         ======================================================================= -->
+    <nav class="bottom-nav" id="bottomNav">
+        <div class="bottom-nav-inner">
+            <button class="bottom-nav-item active" data-tab="overview">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                <span>Live Overview</span>
+            </button>
+            <button class="bottom-nav-item" data-tab="charts">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+                <span>Historical Analytics</span>
+            </button>
+            <button class="bottom-nav-item" data-tab="alerts">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <span>Alert Center</span>
+                <span class="nav-badge" id="navAlertBadge" style="display: none;">0</span>
+            </button>
+            <button class="bottom-nav-item" data-tab="thresholds">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+                <span>Threshold Config</span>
+            </button>
+            <button class="bottom-nav-item" data-tab="reports">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span>Export & Reports</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- =======================================================================
+         SETTINGS MODAL DIALOG
+         ======================================================================= -->
+    <div class="modal-backdrop" id="settingsModal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3>Cloud Channel & Stream Settings</h3>
+                <button class="modal-close-btn" id="btnCloseSettings">&times;</button>
+            </div>
+            <form id="settingsForm">
+                <div class="modal-body">
+                    <p style="font-size: 0.825rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+                        Connect to your ThingSpeak channel. For private channels, enter your Read API Key. Security Notice: Never use or store your Write API Key in frontend web settings.
+                    </p>
+
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label class="form-label" for="setChannelId">ThingSpeak Channel ID</label>
+                        <input class="form-input" type="text" id="setChannelId" placeholder="e.g. 3576765" required>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label class="form-label" for="setReadApiKey">Read API Key (Optional if Channel is Public)</label>
+                        <input class="form-input" type="text" id="setReadApiKey" placeholder="Enter ThingSpeak Read API Key">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 1.25rem;">
+                        <label class="form-label" for="setPollInterval">Polling Interval (Seconds, minimum 15)</label>
+                        <input class="form-input" type="number" min="15" max="300" id="setPollInterval" value="20" required>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 0.65rem; margin-top: 0.5rem; padding-top: 0.75rem; border-top: 1px solid var(--border-light);">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; cursor: pointer; color: var(--text-secondary);">
+                            <input type="checkbox" id="setAutoRefresh" checked>
+                            <span>Enable automatic live polling stream</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; cursor: pointer; color: var(--text-secondary);">
+                            <input type="checkbox" id="setForceLocal">
+                            <span>Force Offline Demonstration Snapshot</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="btnCancelSettings">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Apply Settings</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Application Scripts -->
+    <script src="js/chart.min.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/analytics.js"></script>
+    <script src="js/alerts.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/export.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
